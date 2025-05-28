@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ebenezer International School - Science Quiz Challenge</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Add Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        :root {
+            --ebenezer-blue: #003366;
+            --ebenezer-gold: #FFD700;
+            --science-green: #2ecc71;
+            --science-red: #e74c3c;
+            --science-purple: #9b59b6;
+        }
+        
+    body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 20px;
+    color: #0c0330;
+    background-color: #1a2b3c;
+        }
+
+
+        
+        .header {
+            background-color: var(--ebenezer-blue);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-family: 'Orbitron', sans-serif;
+            margin: 0;
+            font-size: 2.2rem;
+        }
+        
+        .header p {
+            margin: 5px 0 0;
+            font-size: 1.2rem;
+            color: var(--ebenezer-gold);
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .control-panel {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .quiz-interface {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .student-stats {
+            margin-bottom: 20px;
+        }
+        
+        .stats-container {
+            height: 300px;
+            margin-top: 20px;
+            background-color: #f5f3f3;
+        }
+        
+        .student-form {
+            margin-bottom: 20px;
+        }
+        
+        .student-form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .student-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .student-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .subject-selector {
+            margin-bottom: 20px;
+        }
+        
+        .subject-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background-color: var(--ebenezer-blue);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .subject-btn:hover {
+            background-color: #002244;
+            transform: translateY(-2px);
+        }
+        
+        .admin-controls {
+            margin-top: 20px;
+        }
+        
+        .control-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background-color: var(--ebenezer-gold);
+            color: var(--ebenezer-blue);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .control-btn:hover {
+            background-color: #e6c200;
+            transform: translateY(-2px);
+        }
+        
+        .control-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .question-container {
+            margin-bottom: 20px;
+        }
+        
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .question-number-display {
+            background-color: var(--ebenezer-blue);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        
+        .current-student-display {
+            background-color: var(--ebenezer-gold);
+            color: var(--ebenezer-blue);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .timer-display {
+            font-family: 'Orbitron', sans-serif;
+            background-color: #333;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .timer-display.warning {
+            background-color: var(--science-red);
+            animation: pulse 0.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        #question-text {
+            font-size: 2.3rem;
+            line-height: 1.5;
+            background-color: rgba(0, 51, 102, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid var(--ebenezer-blue);
+            margin-bottom: 20px;
+        }
+        
+        .question-image {
+            max-width: 100%;
+            max-height: 300px;
+            display: block;
+            margin: 0 auto 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .option-btn {
+            background-color: white;
+            border: 2px solid #ddd;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            color: #333;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .option-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: var(--ebenezer-blue);
+        }
+        
+        .option-btn.correct {
+            background-color: var(--science-green);
+            color: white;
+            animation: pulse 0.5s;
+        }
+        
+        .option-btn.incorrect {
+            background-color: var(--science-red);
+            color: white;
+        }
+        
+        .option-btn.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .quiz-nav {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .nav-btn {
+            background-color: var(--ebenezer-blue);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .nav-btn:hover {
+            background-color: #002244;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .nav-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .question-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .question-popup.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .question-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            max-width: 800px;
+            padding: 30px;
+            background-color: white;
+            border-radius: 20px;
+        }
+        
+        .question-number {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--ebenezer-blue), var(--science-purple));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: white;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .question-number:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .question-number.answered {
+            background: linear-gradient(135deg, var(--science-green), #27ae60);
+        }
+        
+        .question-number.current {
+            box-shadow: 0 0 0 4px var(--ebenezer-gold);
+        }
+        
+        .plus-two {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: var(--science-green);
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(46, 204, 113, 0.7);
+            opacity: 0;
+            animation: fadeInOut 2s;
+            z-index: 100;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+        }
+        
+        .time-up {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            color: var(--science-red);
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(231, 76, 60, 0.7);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .time-up.active {
+            opacity: 1;
+            animation: pulse 1s infinite;
+        }
+        
+        .question-bank {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+        
+        .question-bank.active {
+            display: block;
+        }
+        
+        .question-bank-form input,
+        .question-bank-form textarea,
+        .question-bank-form select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .question-bank-form button {
+            background-color: var(--ebenezer-blue);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .question-bank-form button:hover {
+            background-color: #002244;
+        }
+        
+        /* Teacher Interface Styles */
+        .teacher-interface {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .teacher-interface.active {
+            display: block;
+        }
+        
+        .switch-mode-btn {
+            position: fixed;
+            display: none;
+            top: 20px;
+            right: 20px;
+            background-color: var(--ebenezer-blue);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 1000;
+        }
+        
+        .teacher-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+        
+        .question-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        
+        .question-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 10px;
+        }
+        
+        .question-item h4 {
+            margin: 0 0 10px;
+        }
+        
+        .question-item-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .question-item-option {
+            padding: 5px;
+            border-radius: 3px;
+        }
+        
+        .question-item-option.correct {
+            background-color: rgba(46, 204, 113, 0.2);
+            border-left: 3px solid var(--science-green);
+        }
+        
+        .question-item-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        .edit-btn {
+            background-color: var(--ebenezer-blue);
+            color: white;
+        }
+        
+        .delete-btn {
+            background-color: var(--science-red);
+            color: white;
+        }
+        
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .teacher-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .question-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .question-item-options {
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+    .question-number.answered {
+    background-color: red !important;
+    color: white !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+    </style>
+</head>
+<body>
+    <button class="switch-mode-btn" id="switch-mode-btn">Switch to Teacher Mode</button>
+    
+    <div class="header">
+        <h1>Ebenezer International School Owo</h1>
+        <p>Weekly Quiz Competition</p>
+        <small> <p style="font-size: 13px;">Platform Built by Gentle:2025</p></small>
+    </div>
+    
+    <!-- Student Quiz Interface -->
+    <div class="container" id="student-interface">
+        <div class="control-panel">
+            <div class="student-form">
+                <h3>Register Students (Max 10)</h3>
+                <input type="text" id="student-name-input" placeholder="Enter student name">
+                <button class="control-btn" id="add-student-btn">Add Student</button>
+            </div>
+            
+            <div class="student-list" id="student-list">
+                <!-- Students will be added here -->
+            </div>
+            
+            <div class="subject-selector">
+                <h3>Select Subject</h3>
+                <button class="subject-btn" data-subject="english">English Language</button>
+                <button class="subject-btn" data-subject="math">Mathematics</button>
+                <button class="subject-btn" data-subject="chemistry">Chemistry/Computer</button>
+                <button class="subject-btn" data-subject="physics">Physics/Basic Tech</button>
+                <button class="subject-btn" data-subject="biology">Biology/Basic Sci</button>
+            </div>
+            
+            <div class="admin-controls">
+                <button class="control-btn" id="start-quiz-btn" disabled>Start Quiz</button>
+                <button class="control-btn" id="reset-quiz-btn">Reset Quiz</button>
+                <button class="control-btn" id="question-bank-btn">Question Bank</button>
+            </div>
+        </div>
+        
+        <div class="quiz-interface">
+            
+            
+            <div class="question-container" id="quiz-container">
+                <div class="question-header">
+                    <div class="question-number-display" id="question-number">1</div>
+                    <div class="current-student-display" id="current-student">Student 1</div>
+                    <div class="timer-display" id="timer-display">30</div>
+                </div>
+                
+                <div id="question-text">Please select a subject and start the quiz</div>
+                <img id="question-image" class="question-image" style="display: none;">
+                
+                <div id="options-container" class="options-grid">
+                    <!-- Options will be added here -->
+                </div>
+                
+                <div class="quiz-nav">
+                    <button id="select-question-btn" class="nav-btn">Select Question</button>
+                    <button id="next-question-btn" class="nav-btn" disabled>Next Question</button>
+                </div>
+                
+                <div id="plus-two" class="plus-two hidden">+2</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Teacher Interface -->
+    <div class="teacher-interface" id="teacher-interface">
+        <h2>Teacher Question Bank Management</h2>
+        
+        <div class="teacher-form">
+            <div class="form-group">
+                <label for="teacher-subject">Subject</label>
+                <select id="teacher-subject">
+                    <option value="english">English Language</option>
+                    <option value="math">Mathematics</option>
+                    <option value="chemistry">Chemistry</option>
+                    <option value="physics">Physics</option>
+                    <option value="biology">Biology</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="teacher-difficulty">Difficulty</label>
+                <select id="teacher-difficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+            
+            <div class="form-group full-width">
+                <label for="teacher-question-text">Question Text</label>
+                <textarea id="teacher-question-text" rows="3" placeholder="Enter the question text"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="teacher-option1">Option 1 (Correct Answer)</label>
+                <input type="text" id="teacher-option1" placeholder="Option 1">
+            </div>
+            
+            <div class="form-group">
+                <label for="teacher-option2">Option 2</label>
+                <input type="text" id="teacher-option2" placeholder="Option 2">
+            </div>
+            
+            <div class="form-group">
+                <label for="teacher-option3">Option 3</label>
+                <input type="text" id="teacher-option3" placeholder="Option 3">
+            </div>
+            
+            <div class="form-group">
+                <label for="teacher-option4">Option 4</label>
+                <input type="text" id="teacher-option4" placeholder="Option 4">
+            </div>
+            
+            <div class="form-group full-width">
+                <label for="teacher-image-url">Image URL (optional)</label>
+                <input type="text" id="teacher-image-url" placeholder="Enter image URL">
+            </div>
+            
+            <div class="form-group">
+                <input type="checkbox" id="teacher-calculation">
+                <label for="teacher-calculation">Calculation Question</label>
+            </div>
+            
+            <div class="form-group">
+                <button id="save-question-btn" class="control-btn">Save Question</button>
+            </div>
+            
+            <div class="form-group">
+                <button id="clear-form-btn" class="control-btn">Clear Form</button>
+            </div>
+        </div>
+        
+        <div class="question-list" id="teacher-question-list">
+            <!-- Questions will be loaded here -->
+        </div>
+    </div>
+    
+    <!-- Common elements -->
+    <div class="question-popup" id="question-popup">
+        <div class="question-grid" id="question-grid">
+            <!-- Question numbers will be added here -->
+        </div>
+    </div>
+    
+    <div class="time-up" id="time-up">TIME UP!</div>
+    
+    <audio id="correct-sound" preload="auto" src="https://www.soundjay.com/human/applause-01.mp3"></audio>
+    <audio id="wrong-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3"></audio>
+    <audio id="tick-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-clock-countdown-bleeps-916.mp3"></audio>
+    <audio id="click-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-modern-click-box-check-1120.mp3"></audio>
+                    
+
+            <div class="student-stats">
+                <h2 style="color: white; font-size: 40px; text-align: center;">Student Statistics</h2>
+                <div class="stats-container" style="height: 100%; width: 100%;">
+                <canvas id="stats-chart" height="1200" style="height: 500px; width: 100%;"></canvas>
+                </div>     
+            </div>
+
+
+<script>
+        // Firebase configuration
+        // Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyBBOzEXqF06A_o-Yyjz3Yf8zE-i7Q-L-5o",
+    authDomain: "eisquiz.firebaseapp.com",
+    databaseURL: "https://eisquiz-default-rtdb.firebaseio.com",
+    projectId: "eisquiz",
+    storageBucket: "eisquiz.appspot.com",
+    messagingSenderId: "26896570103",
+    appId: "1:26896570103:web:5329bdd97a3aada7b7e5f2",
+    measurementId: "G-TQWRDNDG1E"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+// DOM Elements
+const studentNameInput = document.getElementById('student-name-input');
+const addStudentBtn = document.getElementById('add-student-btn');
+const studentList = document.getElementById('student-list');
+const subjectBtns = document.querySelectorAll('.subject-btn');
+const startQuizBtn = document.getElementById('start-quiz-btn');
+const resetQuizBtn = document.getElementById('reset-quiz-btn');
+const questionBankBtn = document.getElementById('question-bank-btn');
+const quizContainer = document.getElementById('quiz-container');
+const questionText = document.getElementById('question-text');
+const questionImage = document.getElementById('question-image');
+const optionsContainer = document.getElementById('options-container');
+const questionNumberDisplay = document.getElementById('question-number');
+const currentStudentDisplay = document.getElementById('current-student');
+const timerDisplay = document.getElementById('timer-display');
+const nextQuestionBtn = document.getElementById('next-question-btn');
+const selectQuestionBtn = document.getElementById('select-question-btn');
+const plusTwo = document.getElementById('plus-two');
+const questionPopup = document.getElementById('question-popup');
+const questionGrid = document.getElementById('question-grid');
+const timeUpDisplay = document.getElementById('time-up');
+const correctSound = document.getElementById('correct-sound');
+const wrongSound = document.getElementById('wrong-sound');
+const tickSound = document.getElementById('tick-sound');
+const clickSound = document.getElementById('click-sound');
+const statsChartCanvas = document.getElementById('stats-chart');
+const switchModeBtn = document.getElementById('switch-mode-btn');
+const studentInterface = document.getElementById('student-interface');
+const teacherInterface = document.getElementById('teacher-interface');
+
+// Quiz variables
+let students = [];
+let currentSubject = null;
+let currentQuestionIndex = -1;
+let currentStudentIndex = 0;
+let quizStarted = false;
+let questionTimer;
+let statsChart;
+let answeredQuestions = [];
+let shuffledQuestions = [];
+
+// Question database
+let questionDatabase = {
+    english: [],
+    math: [],
+    chemistry: [],
+    physics: [],
+    biology: []
+};
+
+// Initialize chart
+function initChart() {
+    const ctx = statsChartCanvas.getContext('2d');
+    statsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: students.map(student => student.name),
+            datasets: [{
+                label: 'Score',
+                data: students.map(student => student.score),
+                backgroundColor: students.map((_, i) => 
+                    `hsl(${(i * 360 / students.length)}, 70%, 50%)`),
+                borderColor: students.map((_, i) => 
+                    `hsl(${(i * 360 / students.length)}, 70%, 30%)`),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 10,
+                    ticks: {
+                        stepSize: 2
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+function updateChart() {
+    if (!statsChart) return;
+    statsChart.data.labels = students.map(student => student.name);
+    statsChart.data.datasets[0].data = students.map(student => student.score);
+    statsChart.update();
+}
+
+function addStudent() {
+    const name = studentNameInput.value.trim();
+    if (name && students.length < 10) {
+        students.push({
+            name: name,
+            score: 0
+        });
+        studentNameInput.value = '';
+        renderStudentList();
+        updateChart();
+        
+        if (students.length > 0 && currentSubject) {
+            startQuizBtn.disabled = false;
+        }
+    }
+}
+
+function renderStudentList() {
+    studentList.innerHTML = '';
+    students.forEach((student, index) => {
+        const studentItem = document.createElement('div');
+        studentItem.className = 'student-item';
+        studentItem.innerHTML = `
+            <span>${student.name}</span>
+            <span>Score: ${student.score}</span>
+        `;
+        studentList.appendChild(studentItem);
+    });
+}
+
+function selectSubject(subject) {
+    currentSubject = subject;
+    subjectBtns.forEach(btn => {
+        if (btn.dataset.subject === subject) {
+            btn.style.backgroundColor = '#002244';
+        } else {
+            btn.style.backgroundColor = '';
+        }
+    });
+    
+    if (students.length > 0) {
+        startQuizBtn.disabled = false;
+    }
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function prepareQuestions() {
+    const questions = questionDatabase[currentSubject];
+    if (!questions) return [];
+    
+    return shuffleArray(questions.map(question => {
+        const options = [...question.options];
+        const correctAnswer = question.answer;
+        const shuffledOptions = shuffleArray([...options]);
+        
+        return {
+            ...question,
+            options: shuffledOptions,
+            correctAnswer: shuffledOptions.indexOf(correctAnswer)
+        };
+    }));
+}
+
+function startQuiz() {
+    if (students.length === 0 || !currentSubject) return;
+    
+    quizStarted = true;
+    startQuizBtn.disabled = true;
+    currentQuestionIndex = -1;
+    currentStudentIndex = 0;
+    answeredQuestions = [];
+    shuffledQuestions = prepareQuestions();
+    
+    // Scores are no longer reset here to allow accumulation across subjects
+    // students.forEach(student => {
+    //     student.score = 0;
+    // });
+    
+    updateChart();
+    renderQuestionNumbers();
+    questionPopup.classList.add('active');
+    
+    questionText.textContent = 'Please select a question to begin';
+    optionsContainer.innerHTML = '';
+    questionNumberDisplay.textContent = '?';
+    currentStudentDisplay.textContent = students[currentStudentIndex].name;
+    timerDisplay.textContent = '--';
+    timerDisplay.className = 'timer-display';
+    questionImage.style.display = 'none';
+    nextQuestionBtn.disabled = true;
+}
+
+
+function showQuestion() {
+    if (!quizStarted || currentQuestionIndex === -1) return;
+    
+    const question = shuffledQuestions[currentQuestionIndex];
+   // NEW (renders HTML formatting correctly)
+    questionText.innerHTML = question.question;
+    questionNumberDisplay.textContent = currentQuestionIndex + 1;
+    currentStudentDisplay.textContent = students[currentStudentIndex].name;
+    
+    if (question.image) {
+        questionImage.src = question.image;
+        questionImage.style.display = 'block';
+    } else {
+        questionImage.style.display = 'none';
+    }
+    
+    optionsContainer.innerHTML = '';
+    question.options.forEach((option, index) => {
+        const button = document.createElement('button');
+        button.textContent = option;
+        button.className = 'option-btn';
+        button.addEventListener('click', () => checkAnswer(index, button));
+        optionsContainer.appendChild(button);
+    });
+    
+    startTimer(question.calculation ? 30 : 10);
+
+    
+}
+
+function startTimer(seconds) {
+    clearInterval(questionTimer);
+    timerDisplay.textContent = seconds;
+    timerDisplay.className = 'timer-display';
+    
+    let timeLeft = seconds;
+    questionTimer = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = timeLeft;
+        
+        if (timeLeft <= 5 && timeLeft > 0) {
+            tickSound.play();
+            timerDisplay.classList.add('warning');
+        }
+        
+        if (timeLeft <= 0) {
+            clearInterval(questionTimer);
+            timeUp();
+        }
+    }, 1000);
+}
+
+function timeUp() {
+    clearInterval(questionTimer);
+    timeUpDisplay.classList.add('active');
+    
+    const question = shuffledQuestions[currentQuestionIndex];
+    const buttons = optionsContainer.querySelectorAll('.option-btn');
+    buttons.forEach(btn => btn.disabled = true);
+    
+    if (question?.correctAnswer !== undefined) {
+        buttons[question.correctAnswer].classList.add('correct');
+    }
+    
+    setTimeout(() => {
+        timeUpDisplay.classList.remove('active');
+        nextQuestionBtn.disabled = false;
+    }, 2000);
+}
+
+function checkAnswer(selectedIndex, button) {
+    clearInterval(questionTimer);
+    
+    const question = shuffledQuestions[currentQuestionIndex];
+    const buttons = optionsContainer.querySelectorAll('.option-btn');
+    buttons.forEach(btn => btn.disabled = true);
+    
+    // Mark question as answered if not already
+    if (!answeredQuestions.includes(currentQuestionIndex)) {
+        answeredQuestions.push(currentQuestionIndex);
+    }
+    
+    if (selectedIndex === question.correctAnswer) {
+        students[currentStudentIndex].score += 2;
+        button.classList.add('correct');
+        correctSound.play();
+        
+        plusTwo.classList.remove('hidden');
+        setTimeout(() => plusTwo.classList.add('hidden'), 2000);
+    } else {
+        button.classList.add('incorrect');
+        buttons[question.correctAnswer].classList.add('correct');
+        wrongSound.play();
+    }
+    
+    updateChart();
+    renderStudentList();
+    nextQuestionBtn.disabled = false;
+}
+
+function nextQuestion() {
+    clickSound.play();
+    currentStudentIndex = (currentStudentIndex + 1) % students.length;
+    renderQuestionNumbers();  // This will now show red numbers for answered questions
+    questionPopup.classList.add('active');
+    
+    questionText.textContent = 'Select next question';
+    optionsContainer.innerHTML = '';
+    currentStudentDisplay.textContent = students[currentStudentIndex].name;
+    questionNumberDisplay.textContent = '?';
+    timerDisplay.textContent = '--';
+    timerDisplay.className = 'timer-display';
+    questionImage.style.display = 'none';
+    nextQuestionBtn.disabled = true;
+}
+
+function renderQuestionNumbers() {
+    questionGrid.innerHTML = '';
+    shuffledQuestions.forEach((_, index) => {
+        const number = document.createElement('div');
+        number.className = 'question-number';
+        
+        // Add 'answered' class and red background if question has been answered
+        if (answeredQuestions.includes(index)) {
+            number.classList.add('answered');
+            number.style.backgroundColor = 'red';
+            number.style.color = 'white';
+        }
+        
+        if (index === currentQuestionIndex) {
+            number.classList.add('current');
+        }
+        
+        number.textContent = index + 1;
+        number.addEventListener('click', () => {
+            if (quizStarted && !answeredQuestions.includes(index)) {  // Only allow click if not answered
+                clickSound.play();
+                currentQuestionIndex = index;
+                answeredQuestions.push(index);  // Mark as answered when selected
+                showQuestion();
+                questionPopup.classList.remove('active');
+            }
+        });
+        questionGrid.appendChild(number);
+    });
+}
+
+function resetQuiz() {
+    quizStarted = false;
+    currentSubject = null;
+    currentQuestionIndex = -1;
+    currentStudentIndex = 0;
+    answeredQuestions = [];
+    shuffledQuestions = [];
+    
+    subjectBtns.forEach(btn => {
+        btn.style.backgroundColor = '';
+    });
+    
+    questionText.textContent = 'Please select a subject and start the quiz';
+    optionsContainer.innerHTML = '';
+    questionNumberDisplay.textContent = '1';
+    currentStudentDisplay.textContent = 'Student 1';
+    timerDisplay.textContent = '30';
+    timerDisplay.className = 'timer-display';
+    questionImage.style.display = 'none';
+    nextQuestionBtn.disabled = true;
+    startQuizBtn.disabled = students.length === 0;
+    
+    students.forEach(student => {
+        student.score = 0;
+    });
+    
+    updateChart();
+    renderStudentList();
+}
+
+function loadQuestionsFromFirebase() {
+    const questionsRef = firebase.database().ref('questions');
+    questionsRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            for (const subject in questionDatabase) {
+                questionDatabase[subject] = data[subject] || [];
+            }
+        }
+    });
+}
+
+// Event listeners
+addStudentBtn.addEventListener('click', addStudent);
+studentNameInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') addStudent();
+});
+
+subjectBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        clickSound.play();
+        selectSubject(btn.dataset.subject);
+    });
+});
+
+startQuizBtn.addEventListener('click', startQuiz);
+resetQuizBtn.addEventListener('click', resetQuiz);
+nextQuestionBtn.addEventListener('click', nextQuestion);
+selectQuestionBtn.addEventListener('click', () => {
+    clickSound.play();
+    renderQuestionNumbers();
+    questionPopup.classList.add('active');
+});
+
+// Initialize
+initChart();
+loadQuestionsFromFirebase();
+</script>
+
+
+<footer style="background-color:#003366; color:#fff; padding:40px 20px; font-family:'Segoe UI', sans-serif;">
+  <div style="max-width:1200px; margin:auto; display:flex; flex-wrap:wrap; justify-content:space-between; gap:30px;">
+
+    <!-- About Section -->
+    <div style="flex:1; min-width:250px;">
+      <h3 style="color:#00aaff; margin-bottom:10px;">About Generation</h3>
+      <p style="line-height:1.6;">Generation is a smart quiz platform by <strong>Ebere Gentle Victor</strong>, delivering AI-powered learning for modern students across all levels.</p>
+    </div>
+
+    <!-- Contact Section -->
+    <div style="flex:1; min-width:250px;">
+      <h3 style="color:#00aaff; margin-bottom:10px;">Contact</h3>
+      <p><i class="fas fa-envelope"></i> <span id="email" style="color:#00ccff; cursor:pointer;" onclick="copyEmail()">eberevictorgentle@gmail.com</span></p>
+      <p><i class="fas fa-phone-alt"></i> <span style="color:#ccc;">+234-XXXXXXXXXX</span></p>
+      <p><i class="fas fa-map-marker-alt"></i> <span style="color:#ccc;">Nigeria</span></p>
+    </div>
+
+    <!-- Quick Links -->
+    <div style="flex:1; min-width:250px;">
+      <h3 style="color:#00aaff; margin-bottom:10px;">Quick Links</h3>
+      <a href="#" style="color:#ccc; display:block; margin-bottom:8px; text-decoration:none;" onmouseover="highlight(this)" onmouseout="unhighlight(this)">
+        <i class="fas fa-home"></i> Home</a>
+      <a href="#" style="color:#ccc; display:block; margin-bottom:8px; text-decoration:none;" onmouseover="highlight(this)" onmouseout="unhighlight(this)">
+        <i class="fas fa-question-circle"></i> Quizzes</a>
+      <a href="#" style="color:#ccc; display:block; margin-bottom:8px; text-decoration:none;" onmouseover="highlight(this)" onmouseout="unhighlight(this)">
+        <i class="fas fa-user-graduate"></i> About Us</a>
+      <a href="#" style="color:#ccc; display:block; margin-bottom:8px; text-decoration:none;" onmouseover="highlight(this)" onmouseout="unhighlight(this)">
+        <i class="fas fa-envelope-open-text"></i> Contact</a>
+    </div>
+
+    <!-- Social Media -->
+    <div style="flex:1; min-width:250px;">
+      <h3 style="color:#00aaff; margin-bottom:10px;">Follow Us</h3>
+      <p>
+        <a href="#" style="color:#ccc; margin-right:15px; font-size:18px;" onmouseover="highlight(this)" onmouseout="unhighlight(this)">
+          <i class="fab fa-facebook-f"></i></a>
+        <a href="#" style="color:#ccc; margin-right:15px; font-size:18px;" onmouseover="highlight(this)" onmouseout="unhighlight(this)">
+          <i class="fab fa-twitter"></i></a>
+        <a href="#" style="color:#ccc; margin-right:15px; font-size:18px;" onmouseover="highlight(this)" onmouseout="unhighlight(this)">
+          <i class="fab fa-instagram"></i></a>
+        <a href="#" style="color:#ccc; font-size:18px;" onmouseover="highlight(this)" onmouseout="unhighlight(this)">
+          <i class="fab fa-linkedin-in"></i></a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Footer Bottom -->
+  <div style="text-align:center; margin-top:30px; border-top:1px solid #004080; padding-top:20px;">
+    <p style="font-size:14px; color:#bbb;">&copy; <span id="year"></span> Generation by Ebere Gentle Victor. All rights reserved.</p>
+    <button onclick="scrollTopSmooth()" style="margin-top:10px; padding:8px 16px; background-color:#00ccff; color:#003366; border:none; border-radius:4px; cursor:pointer;">
+      <i class="fas fa-arrow-up"></i> Back to Top</button>
+  </div>
+
+  <script>
+    // Set current year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Hover highlight effect
+    function highlight(el) {
+      el.style.color = "#00ccff";
+    }
+
+    function unhighlight(el) {
+      el.style.color = "#ccc";
+    }
+
+    // Email copy to clipboard
+    function copyEmail() {
+      const email = document.getElementById("email").textContent;
+      navigator.clipboard.writeText(email).then(() => {
+        alert("Email copied to clipboard!");
+      });
+    }
+
+    // Smooth scroll to top
+    function scrollTopSmooth() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Responsive font size on window resize
+    window.addEventListener('resize', function () {
+      document.querySelector('footer').style.fontSize = window.innerWidth < 500 ? "14px" : "16px";
+    });
+    window.dispatchEvent(new Event('resize')); // Trigger on load
+  </script>
+</footer>
+
+
+</body>
+</html>
